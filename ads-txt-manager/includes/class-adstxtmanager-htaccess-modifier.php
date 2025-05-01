@@ -1,8 +1,10 @@
 <?php
 
-class AdstxtManager_HTACCESS_MODIFIER implements iAdsTxtManager_Solution {
+class AdstxtManager_HTACCESS_MODIFIER implements iAdsTxtManager_Solution
+{
 
-    public function SetupSolution() {
+    public function SetupSolution()
+    {
         $this->GenerateHTACCESSFile();
 
         // setup file modifier as backup
@@ -12,10 +14,11 @@ class AdstxtManager_HTACCESS_MODIFIER implements iAdsTxtManager_Solution {
         $redirect_status = AdstxtManager_Admin::verify_adstxt_redirect();
         $adstxtmanager_status = get_option('adstxtmanager_status');
         $adstxtmanager_status['status'] = $redirect_status;
-        update_option( 'adstxtmanager_status', $adstxtmanager_status );
+        update_option('adstxtmanager_status', $adstxtmanager_status);
     }
 
-    public function TearDownSolution() {
+    public function TearDownSolution()
+    {
         $this->RemoveHTACCESSFile();
 
         $fileModifier = new AdsTxtManager_File_Modifier();
@@ -24,17 +27,19 @@ class AdstxtManager_HTACCESS_MODIFIER implements iAdsTxtManager_Solution {
         delete_option('adstxtmanager_status');
     }
 
-    private function determineHTACCESSRootPath() {
+    private function determineHTACCESSRootPath()
+    {
         return get_home_path();
     }
 
-    public function GenerateHTACCESSFile() {
+    public function GenerateHTACCESSFile()
+    {
         global $wp, $wp_filesystem;
         $message = '';
 
         //Get path to cache folder and insert out htaccess file or modify current htaccess file
         $filePath = $this->determineHTACCESSRootPath() . ".htaccess";
-	    if(empty($filePath) || !file_exists($filePath) || !is_readable($filePath) || !is_writable($filePath)) {
+        if (empty($filePath) || !file_exists($filePath) || !is_readable($filePath) || !is_writable($filePath)) {
             return;
         }
         //Make sure we start clean
@@ -44,26 +49,30 @@ class AdstxtManager_HTACCESS_MODIFIER implements iAdsTxtManager_Solution {
 
         $adstxtmanager_id = get_option('adstxtmanager_id');
         $domain = "";
-        if( is_int($adstxtmanager_id["adstxtmanager_id"]) && $adstxtmanager_id["adstxtmanager_id"] !== 0 ) {
-            $domain = home_url( $wp->request );
+        if (is_int($adstxtmanager_id["adstxtmanager_id"]) && $adstxtmanager_id["adstxtmanager_id"] !== 0) {
+            $domain = home_url($wp->request);
             $domain = parse_url($domain);
             $domain = $domain['host'];
             $domain = preg_replace('#^(http(s)?://)?w{3}\.#', '$1', $domain);
         }
 
-        if( $domain === "" ) {
+        if ($domain === "") {
             //We don't have a domain, don't fudge this up
             return;
         }
 
-        $atmContent = array("#BEGIN_ADSTXTMANAGER_HTACCESS_HANDLER",
-                            '<IfModule mod_rewrite.c>',
-                            'Redirect 301 /ads.txt ' . 'https://srv.adstxtmanager.com/'. $adstxtmanager_id["adstxtmanager_id"] . '/' . $domain,
-                            '</IfModule>',
-                            "#END_ADSTXTMANAGER_HTACCESS_HANDLER");
+        $atmContent = array(
+            "#BEGIN_ADSTXTMANAGER_HTACCESS_HANDLER",
+            '<IfModule mod_rewrite.c>',
+            'RewriteEngine On',
+            'RewriteCond %{REQUEST_URI} ^/ads.txt [NC]',
+            'RewriteRule ^ads.txt(.*)$ https://srv.adstxtmanager.com/' . $adstxtmanager_id["adstxtmanager_id"] . '/' . $domain . ' [R=301,L]',
+            '</IfModule>',
+            "#END_ADSTXTMANAGER_HTACCESS_HANDLER"
+        );
 
         $atmFinalContent = implode("\n", $atmContent);
-        $modifiedContent = $atmFinalContent . "\n" .$content;
+        $modifiedContent = $atmFinalContent . "\n" . $content;
 
         $success = $wp_filesystem->put_contents($filePath, $modifiedContent);
         @clearstatcache();
@@ -80,12 +89,13 @@ class AdstxtManager_HTACCESS_MODIFIER implements iAdsTxtManager_Solution {
         }
     }
 
-    public function RemoveHTACCESSFile() {
+    public function RemoveHTACCESSFile()
+    {
         //Get path to cache folder and din htaccess file,
         //see if we are the only code in the file and then remove it
         $filePath = $this->determineHTACCESSRootPath() . ".htaccess";
 
-        if(empty($filePath) || !file_exists($filePath) || !is_writable($filePath)) {
+        if (empty($filePath) || !file_exists($filePath) || !is_writable($filePath)) {
             return;
         }
 
@@ -94,20 +104,20 @@ class AdstxtManager_HTACCESS_MODIFIER implements iAdsTxtManager_Solution {
         //Find all text between #ADSTXTMANAGER_INTEGRATION_MODIFICATION
         $beginAtmContent = 0;
         $endAtmContent = 0;
-        foreach( $lineContent as $key => $value ) {
-            if( $value == "#BEGIN_ADSTXTMANAGER_HTACCESS_HANDLER" ) {
+        foreach ($lineContent as $key => $value) {
+            if ($value == "#BEGIN_ADSTXTMANAGER_HTACCESS_HANDLER") {
                 $beginAtmContent = $key;
-            } elseif ( $value == "#END_ADSTXTMANAGER_HTACCESS_HANDLER") {
+            } elseif ($value == "#END_ADSTXTMANAGER_HTACCESS_HANDLER") {
                 $endAtmContent = $key;
             }
         }
 
-        if( $endAtmContent == 0 ) {
+        if ($endAtmContent == 0) {
             //Don't do anything if we couldn't find an end to our code
             return;
         }
 
-        for( $i = $beginAtmContent; $i <= $endAtmContent; $i++ ) {
+        for ($i = $beginAtmContent; $i <= $endAtmContent; $i++) {
             unset($lineContent[$i]);
         }
 
@@ -115,7 +125,4 @@ class AdstxtManager_HTACCESS_MODIFIER implements iAdsTxtManager_Solution {
         //Dump out to htaccess file
         file_put_contents($filePath, $modifiedContent);
     }
-
-
-
 }

@@ -5,7 +5,7 @@ Plugin URL: https://wordpress.org/plugins/ads-txt-manager/
 Donate link: https://www.adstxtmanager.com/
 Tags: ads.txt, ads txt, ads, ad manager, advertising, publishing, publishers, monetization, ezoic
 Requires at least: 4.6
-Tested up to: 5.7
+Tested up to: 6.8.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -67,3 +67,6 @@ Then you're done!
 = 1.0.9 =
 * added redirect verification
 * added/update error/success messages
+
+= 1.1.0 =
+* Updated ads.txt redirection

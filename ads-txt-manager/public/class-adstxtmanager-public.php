@@ -20,7 +20,8 @@
  * @subpackage Ads.txt Manager/public
  * @author     Ads.txt Manager <tech@adstxtmanager.com>
  */
-class AdstxtManager_Public {
+class AdstxtManager_Public
+{
 
 	/**
 	 * The ID of this plugin.
@@ -47,30 +48,33 @@ class AdstxtManager_Public {
 	 * @param      string    $plugin_name       The name of the plugin.
 	 * @param      string    $version    The version of this plugin.
 	 */
-	public function __construct( $plugin_name, $version ) {
+	public function __construct($plugin_name, $version)
+	{
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
-
 	}
 
-	public function handle_adstxt() {
+	public function handle_adstxt()
+	{
 		global $wp;
 
-        $request = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : false;
-        if ('/ads.txt' == $request && get_option('permalink_structure')) {
-            $adstxtmanager_id = get_option('adstxtmanager_id');
+		$request = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : false;
+		// Parse the URL to handle query parameters
+		$url_path = parse_url($request, PHP_URL_PATH);
+		if ('/ads.txt' == $url_path && get_option('permalink_structure')) {
+			$adstxtmanager_id = get_option('adstxtmanager_id');
 
-            if (!empty($adstxtmanager_id["adstxtmanager_id"]) && is_int($adstxtmanager_id["adstxtmanager_id"])) {
-                $domain = home_url($wp->request);
-                $domain = parse_url($domain);
-                $domain = $domain['host'];
-                $domain = preg_replace('#^(http(s)?://)?w{3}\.#', '$1', $domain);
-                header("HTTP/1.1 301 Moved Permanently");
-                header('Location: https://srv.adstxtmanager.com/' . $adstxtmanager_id["adstxtmanager_id"] . '/' . $domain);
-                exit();
-            }
-        }
+			if (!empty($adstxtmanager_id["adstxtmanager_id"]) && is_int($adstxtmanager_id["adstxtmanager_id"])) {
+				$domain = home_url($wp->request);
+				$domain = parse_url($domain);
+				$domain = $domain['host'];
+				$domain = preg_replace('#^(http(s)?://)?w{3}\.#', '$1', $domain);
+				header("HTTP/1.1 301 Moved Permanently");
+				header('Location: https://srv.adstxtmanager.com/' . $adstxtmanager_id["adstxtmanager_id"] . '/' . $domain);
+				exit();
+			}
+		}
 	}
 
 	/**
@@ -78,17 +82,12 @@ class AdstxtManager_Public {
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_styles() {
-
-	}
+	public function enqueue_styles() {}
 
 	/**
 	 * Register the JavaScript for the public-facing side of the site.
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_scripts() {
-
-	}
-
+	public function enqueue_scripts() {}
 }

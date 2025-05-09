@@ -63,16 +63,18 @@ class AdstxtManager_Public
 		// Parse the URL to handle query parameters
 		$url_path = parse_url($request, PHP_URL_PATH);
 		if ('/ads.txt' == $url_path && get_option('permalink_structure')) {
-			$adstxtmanager_id = get_option('adstxtmanager_id');
+			// Use the helper function to get the ID value
+			$adstxtmanager_id_value = AdstxtManager::get_adstxtmanager_id_value();
 
-			if (!empty($adstxtmanager_id["adstxtmanager_id"]) && is_int($adstxtmanager_id["adstxtmanager_id"])) {
-				$domain = home_url($wp->request);
-				$domain = parse_url($domain);
-				$domain = $domain['host'];
-				$domain = preg_replace('#^(http(s)?://)?w{3}\.#', '$1', $domain);
-				header("HTTP/1.1 301 Moved Permanently");
-				header('Location: https://srv.adstxtmanager.com/' . $adstxtmanager_id["adstxtmanager_id"] . '/' . $domain);
-				exit();
+			if ($adstxtmanager_id_value > 0) {
+				// Get the ads.txt URL using the helper function
+				$ads_txt_url = AdstxtManager::get_ads_txt_url();
+
+				if ($ads_txt_url) {
+					header("HTTP/1.1 301 Moved Permanently");
+					header('Location: ' . $ads_txt_url);
+					exit();
+				}
 			}
 		}
 	}

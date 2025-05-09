@@ -70,3 +70,8 @@ Then you're done!
 
 = 1.1.0 =
 * Updated ads.txt redirection
+
+= 1.2.0 =
+* Improved ads.txt redirect reliability and stability
+* Added "View Ads.txt" button for quick access
+* Enhanced compatibility with various WordPress configurations

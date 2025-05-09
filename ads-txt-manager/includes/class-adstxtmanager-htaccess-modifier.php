@@ -47,17 +47,46 @@ class AdstxtManager_HTACCESS_MODIFIER implements iAdsTxtManager_Solution
 
         $content = $wp_filesystem->get_contents($filePath);
 
-        $adstxtmanager_id = get_option('adstxtmanager_id');
-        $domain = "";
-        if (is_int($adstxtmanager_id["adstxtmanager_id"]) && $adstxtmanager_id["adstxtmanager_id"] !== 0) {
-            $domain = home_url($wp->request);
-            $domain = parse_url($domain);
-            $domain = $domain['host'];
-            $domain = preg_replace('#^(http(s)?://)?w{3}\.#', '$1', $domain);
+        // Use the helper function to get the ID value
+        $adstxtmanager_id_value = AdstxtManager::get_adstxtmanager_id_value();
+
+        // If ID is invalid (0 or negative), make sure to remove any existing htaccess rules
+        if ($adstxtmanager_id_value <= 0) {
+            // Clean up any existing rules
+            self::RemoveHTACCESSFile();
+
+            // Update the status to indicate no valid ID
+            $adstxtmanager_status = get_option('adstxtmanager_status');
+            $adstxtmanager_status['status'] = false;
+            $adstxtmanager_status['message'] = "No valid Ads.txt Manager ID found. Redirection has been disabled.";
+            update_option('adstxtmanager_status', $adstxtmanager_status);
+
+            return;
         }
 
+        $domain = "";
+        $domain = home_url($wp->request);
+        $domain = parse_url($domain);
+        if (!isset($domain['host'])) {
+            // No valid domain found, clean up and return
+            self::RemoveHTACCESSFile();
+            return;
+        }
+        $domain = $domain['host'];
+        $domain = preg_replace('#^(http(s)?://)?w{3}\.#', '$1', $domain);
+
         if ($domain === "") {
-            //We don't have a domain, don't fudge this up
+            // No valid domain found, clean up and return
+            self::RemoveHTACCESSFile();
+            return;
+        }
+
+        // Get the ads.txt URL using the helper function
+        $ads_txt_url = AdstxtManager::get_ads_txt_url();
+
+        if (!$ads_txt_url) {
+            // No valid URL could be generated, clean up and return
+            self::RemoveHTACCESSFile();
             return;
         }
 
@@ -66,7 +95,7 @@ class AdstxtManager_HTACCESS_MODIFIER implements iAdsTxtManager_Solution
             '<IfModule mod_rewrite.c>',
             'RewriteEngine On',
             'RewriteCond %{REQUEST_URI} ^/ads.txt [NC]',
-            'RewriteRule ^ads.txt(.*)$ https://srv.adstxtmanager.com/' . $adstxtmanager_id["adstxtmanager_id"] . '/' . $domain . ' [R=301,L]',
+            'RewriteRule ^ads.txt(.*)$ ' . $ads_txt_url . ' [R=301,L]',
             '</IfModule>',
             "#END_ADSTXTMANAGER_HTACCESS_HANDLER"
         );

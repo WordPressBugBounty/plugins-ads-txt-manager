@@ -15,7 +15,7 @@
  * @wordpress-plugin
  * Plugin Name:       Ads.txt Manager
  * Description:       This plugin allows AdsTxtManger.com to easily manage your ads.txt and integrate with your WordPress site.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Author:            Ads.txt Manager <tech@adstxtmanager.com>
  * Author URI:        https://www.adstxtmanager.com/
  * License:           GPL-2.0+
@@ -34,7 +34,7 @@ if (! defined('WPINC')) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define('ADSTXT_MANAGER_VERSION', '1.1.0');
+define('ADSTXT_MANAGER_VERSION', '1.2.0');
 define('ADSTXT_MANAGER__PLUGIN_NAME', 'Ads.txt Manager');
 define('ADSTXT_MANAGER__PLUGIN_SLUG', dirname(plugin_basename(__FILE__)));
 define('ADSTXT_MANAGER__PLUGIN_DIR', plugin_dir_path(__FILE__));

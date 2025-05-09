@@ -21,50 +21,56 @@
  * @author     Ads.txt Manager <tech@adstxtmanager.com>
  */
 
-class AdstxtManager_Admin {
+class AdstxtManager_Admin
+{
 
-	/**
-	 * The ID of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $plugin_name    The ID of this plugin.
-	 */
-	private $plugin_name;
+    /**
+     * The ID of this plugin.
+     *
+     * @since    1.0.0
+     * @access   private
+     * @var      string    $plugin_name    The ID of this plugin.
+     */
+    private $plugin_name;
 
-	/**
-	 * The version of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $version    The current version of this plugin.
-	 */
+    /**
+     * The version of this plugin.
+     *
+     * @since    1.0.0
+     * @access   private
+     * @var      string    $version    The current version of this plugin.
+     */
     private $version;
 
     private $options;
 
-	/**
-	 * Initialize the class and set its properties.
-	 *
-	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of this plugin.
-	 * @param      string    $version    The version of this plugin.
-	 */
-	public function __construct( $plugin_name, $version ) {
+    /**
+     * Initialize the class and set its properties.
+     *
+     * @since    1.0.0
+     * @param      string    $plugin_name       The name of this plugin.
+     * @param      string    $version    The version of this plugin.
+     */
+    public function __construct($plugin_name, $version)
+    {
 
-		$this->plugin_name = $plugin_name;
+        $this->plugin_name = $plugin_name;
         $this->version = $version;
         $this->options = array();
-
     }
 
-	public function display_notice() {
+    public function display_notice()
+    {
         global $hook_suffix, $pagenow;
 
-        $adstxtmanager_id = get_option('adstxtmanager_id');
         $adstxtmanager_status = get_option('adstxtmanager_status');
+        // Initialize as array if it doesn't exist
+        if (false === $adstxtmanager_status) {
+            $adstxtmanager_status = array();
+        }
+        $adstxtmanager_id_value = AdstxtManager::get_adstxtmanager_id_value();
 
-        if (!is_int($adstxtmanager_id["adstxtmanager_id"]) || empty($adstxtmanager_id["adstxtmanager_id"])) {
+        if ($adstxtmanager_id_value <= 0) {
             // delete status option
             delete_option('adstxtmanager_status');
         } else if (in_array($pagenow, array('options-general.php')) && ($_GET['page'] == 'adstxtmanager-setting-admin')) {
@@ -77,42 +83,54 @@ class AdstxtManager_Admin {
 
                 $redirect_status = $this->verify_adstxt_redirect();
                 $adstxtmanager_status = get_option('adstxtmanager_status');
+                // Initialize as array if it doesn't exist
+                if (false === $adstxtmanager_status) {
+                    $adstxtmanager_status = array();
+                }
                 $adstxtmanager_status['status'] = $redirect_status;
                 update_option('adstxtmanager_status', $adstxtmanager_status);
             }
 
             if (get_option('adstxtmanager_id') > 0 && false !== $adstxtmanager_status) {
+                // Initialize status key if it doesn't exist to prevent "undefined array key" warning
+                if (!isset($adstxtmanager_status['status'])) {
+                    $adstxtmanager_status['status'] = false;
+                }
+
                 if ($adstxtmanager_status['status'] === true) {
-                    ?>
+?>
                     <div class="notice notice-success">
                         <p>Success: Your ads.txt redirect is successfully setup.</p>
                     </div>
-                    <?php
+                <?php
                 } else {
-                    ?>
+                ?>
                     <div class="notice notice-warning">
                         <p>Oh no! Your ads.txt redirect is not setup correctly!
-                            <a href="?page=adstxtmanager-setting-admin&verify=1">Rerun setup and recheck redirection</a>.</p>
+                            <a href="?page=adstxtmanager-setting-admin&verify=1">Rerun setup and recheck redirection</a>.
+                        </p>
                         <?php if (!empty($adstxtmanager_status['message'])) { ?>
-                            <hr/><p><?php _e($adstxtmanager_status['message']); ?></p>
+                            <hr />
+                            <p><?php _e($adstxtmanager_status['message']); ?></p>
                         <?php } ?>
                     </div>
-                    <?php
+        <?php
                 }
             }
         }
 
-		if ( in_array( $hook_suffix, array( 'plugins.php' ) ) ) {
+        if (in_array($hook_suffix, array('plugins.php'))) {
 
             $has_issue = false;
             $issue_types = array();
-			if( !get_option('permalink_structure') ) {
+            if (!get_option('permalink_structure')) {
                 $issue_types['type'] = 'permalinks_disabled';
-				$has_issue = true;
+                $has_issue = true;
             }
 
-			if( !is_int($adstxtmanager_id["adstxtmanager_id"]) || empty($adstxtmanager_id["adstxtmanager_id"])) {
-                if( $has_issue ) {
+            // Get the ID value using the helper function
+            if ($adstxtmanager_id_value <= 0) {
+                if ($has_issue) {
                     $issue_types['type'] = $issue_types['type'] . "+" . "no_id";
                 } else {
                     $issue_types['type'] = 'no_id';
@@ -120,18 +138,18 @@ class AdstxtManager_Admin {
                 }
             }
 
-            if( $has_issue ) {
-                $args = apply_filters( 'adstxtmanager_view_arguments', $issue_types, 'adstxtmanager-admin' );
+            if ($has_issue) {
+                $args = apply_filters('adstxtmanager_view_arguments', $issue_types, 'adstxtmanager-admin');
 
-                foreach ( $args AS $key => $val ) {
-					$$key = $val;
-				}
+                foreach ($args as $key => $val) {
+                    $$key = $val;
+                }
 
-				$file = ADSTXT_MANAGER__PLUGIN_DIR . 'admin/partials/'. 'adstxtmanager-admin-display' . '.php';
+                $file = ADSTXT_MANAGER__PLUGIN_DIR . 'admin/partials/' . 'adstxtmanager-admin-display' . '.php';
 
-				include( $file );
+                include($file);
             }
-		}
+        }
     }
 
     /**
@@ -143,39 +161,40 @@ class AdstxtManager_Admin {
      *
      * @return array
      */
-    public function add_action_links( $links ) {
+    public function add_action_links($links)
+    {
         $settings_link = array(
-            '<a href="options-general.php?page=adstxtmanager-setting-admin">' . __( 'Settings' ) . '</a>',
-            '<a href="' . ADSTXT_MANAGER__SITE_LOGIN . '" target="_blank">' . __( 'Login' ) . '</a>',
+            '<a href="options-general.php?page=adstxtmanager-setting-admin">' . __('Settings') . '</a>',
+            '<a href="' . ADSTXT_MANAGER__SITE_LOGIN . '" target="_blank">' . __('Login') . '</a>',
         );
 
-        return array_merge( $links, $settings_link );
+        return array_merge($links, $settings_link);
     }
 
-	/**
-	 * Register the stylesheets for the admin area.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_styles() {
+    /**
+     * Register the stylesheets for the admin area.
+     *
+     * @since    1.0.0
+     */
+    public function enqueue_styles()
+    {
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in AdstxtManager_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The AdstxtManager_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
+        /**
+         * This function is provided for demonstration purposes only.
+         *
+         * An instance of this class should be passed to the run() function
+         * defined in AdstxtManager_Loader as all of the hooks are defined
+         * in that particular class.
+         *
+         * The AdstxtManager_Loader will then create the relationship
+         * between the defined hooks and the functions defined in this
+         * class.
+         */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/adstxtmanager-admin.css', array(), $this->version, 'all' );
+        wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/adstxtmanager-admin.css', array(), $this->version, 'all');
+    }
 
-	}
-
-	    /**
+    /**
      * Add options page
      */
     public function add_plugin_page()
@@ -186,7 +205,7 @@ class AdstxtManager_Admin {
             'Ads.txt Manager Settings',
             'manage_options',
             'adstxtmanager-setting-admin',
-            array( $this, 'create_admin_page' )
+            array($this, 'create_admin_page')
         );
     }
 
@@ -196,35 +215,50 @@ class AdstxtManager_Admin {
     public function create_admin_page()
     {
         // Set class property
-        $this->options = get_option( 'adstxtmanager_id' );
+        $this->options = get_option('adstxtmanager_id');
         $adstxtmanager_status = get_option('adstxtmanager_status');
+        // Initialize as array if it doesn't exist
+        if (false === $adstxtmanager_status) {
+            $adstxtmanager_status = array();
+        }
 
         ?>
         <div class="wrap">
             <h1>Ads.txt Manager Settings</h1>
             <?php
 
-            if(empty($this->options['adstxtmanager_id'])) {
-                ?>
+            if (empty($this->options['adstxtmanager_id'])) {
+            ?>
                 <div class="notice notice-info">
                     <p>In order to use Ads.txt Manager, you must enter your Ads.txt Manager ID number below.</p>
-                    <p>To find your ID on adstxtmanager.com, <a href="<?php esc_attr_e( ADSTXT_MANAGER__SITE_LOGIN, 'adstxtmanager' ); ?>" target="_blank">click here</a> to login, or create a <a href="<?php esc_attr_e( ADSTXT_MANAGER__SITE, 'adstxtmanager' ); ?>" target="_blank">new account</a>.</p>
+                    <p>To find your ID on adstxtmanager.com, <a href="<?php esc_attr_e(ADSTXT_MANAGER__SITE_LOGIN, 'adstxtmanager'); ?>" target="_blank">click here</a> to login, or create a <a href="<?php esc_attr_e(ADSTXT_MANAGER__SITE, 'adstxtmanager'); ?>" target="_blank">new account</a>.</p>
                 </div>
-                <?php
+            <?php
             }
 
             ?>
 
             <form method="post" action="options.php">
                 <?php
-                // This prints out all hidden setting fields
                 settings_fields('adstxtmanager_id_group');
                 do_settings_sections('adstxtmanager-setting-admin');
                 submit_button('Save Changes', 'primary', 'submit', false);
+
+                if (
+                    !empty($this->options['adstxtmanager_id']) &&
+                    isset($adstxtmanager_status['status']) &&
+                    $adstxtmanager_status['status'] === true
+                ) {
+                    $ads_txt_url = AdstxtManager::get_ads_txt_url();
+
+                    if ($ads_txt_url) {
+                        echo '<a href="' . esc_url($ads_txt_url) . '" target="_blank" class="button button-secondary view-ads-txt">View Ads.txt</a>';
+                    }
+                }
                 ?>
             </form>
         </div>
-        <?php
+<?php
     }
 
     /**
@@ -241,20 +275,20 @@ class AdstxtManager_Admin {
         register_setting(
             'adstxtmanager_id_group', // Option group
             'adstxtmanager_id', // Option name
-            array( $this, 'sanitize' ) // Sanitize
+            array($this, 'sanitize') // Sanitize
         );
 
         add_settings_section(
             'setting_section_id', // ID
             'Ads.txt Manager ID', // Title
-            array( $this, 'print_section_info' ), // Callback
+            array($this, 'print_section_info'), // Callback
             'adstxtmanager-setting-admin' // Page
         );
 
         add_settings_field(
             'adstxtmanager_id', // ID
             'ID Number', // Title
-            array( $this, 'id_number_callback' ), // Callback
+            array($this, 'id_number_callback'), // Callback
             'adstxtmanager-setting-admin', // Page
             'setting_section_id' // Section
         );
@@ -266,11 +300,14 @@ class AdstxtManager_Admin {
      * @param array $input Contains all settings fields as array keys
      * @return array
      */
-    public function sanitize( $input )
+    public function sanitize($input)
     {
         $new_input = array();
-        if( isset( $input['adstxtmanager_id'] ) ) {
-            $new_input['adstxtmanager_id'] = absint( $input['adstxtmanager_id'] );
+        if (isset($input['adstxtmanager_id'])) {
+            $new_input['adstxtmanager_id'] = absint($input['adstxtmanager_id']);
+
+            // No need to add additional verification here as we've already added
+            // a hook directly in the AdstxtManager class to verify after the solution setup
         }
 
         return $new_input;
@@ -281,7 +318,7 @@ class AdstxtManager_Admin {
      */
     public function print_section_info()
     {
-        print 'Enter your Ads.txt Manager ID below:';
+        print 'Enter your Ads.txt Manager ID below.';
     }
 
     /**
@@ -291,17 +328,31 @@ class AdstxtManager_Admin {
     {
         printf(
             '<input type="text" id="adstxtmanager_id" name="adstxtmanager_id[adstxtmanager_id]" value="%s" />',
-            isset( $this->options['adstxtmanager_id'] ) ? esc_attr( $this->options['adstxtmanager_id']) : ''
+            isset($this->options['adstxtmanager_id']) ? esc_attr($this->options['adstxtmanager_id']) : ''
         );
     }
 
     /**
      * @return bool
      */
-    public static function verify_adstxt_redirect() {
+    public static function verify_adstxt_redirect()
+    {
         global $wp;
 
         $adstxtmanager_status = get_option('adstxtmanager_status');
+        // Initialize as array if it doesn't exist
+        if (false === $adstxtmanager_status) {
+            $adstxtmanager_status = array();
+        }
+
+        // Check if we have a valid ID first
+        $adstxtmanager_id_value = AdstxtManager::get_adstxtmanager_id_value();
+        if ($adstxtmanager_id_value <= 0) {
+            $adstxtmanager_status['message'] = "No valid Ads.txt Manager ID found. Please enter a valid ID in the settings.";
+            $adstxtmanager_status['status'] = false;
+            update_option('adstxtmanager_status', $adstxtmanager_status);
+            return false;
+        }
 
         //create endpoint request
         $response = wp_remote_get(home_url($wp->request) . "/ads.txt", array(
@@ -316,12 +367,31 @@ class AdstxtManager_Admin {
             && method_exists($response['http_response'], 'get_response_object')
         ) {
             $location_url = $response['http_response']->get_response_object()->url;
+            $response_code = wp_remote_retrieve_response_code($response);
 
             $url_parse = wp_parse_url($location_url);
-            if ($url_parse['host'] == "srv.adstxtmanager.com") {
-                $adstxtmanager_status['message'] = "";
-                update_option('adstxtmanager_status', $adstxtmanager_status);
-                return true;
+            // Get the expected URL using our helper function
+            $ads_txt_url = AdstxtManager::get_ads_txt_url();
+            $expected_host = $ads_txt_url ? wp_parse_url($ads_txt_url, PHP_URL_HOST) : "srv.adstxtmanager.com";
+
+            // Check if redirecting to the correct host
+            if ($url_parse['host'] == $expected_host) {
+                // Check if the response is a 404 or other error
+                if ($response_code == 404) {
+                    $adstxtmanager_status['message'] = "The ads.txt URL returned a 404 error. Your account ID may be incorrect or the account may not be properly set up on adstxtmanager.com or Ezoic.";
+                    update_option('adstxtmanager_status', $adstxtmanager_status);
+                    return false;
+                } else if ($response_code >= 200 && $response_code < 400) {
+                    // Successful response
+                    $adstxtmanager_status['message'] = "";
+                    update_option('adstxtmanager_status', $adstxtmanager_status);
+                    return true;
+                } else {
+                    // Other error response
+                    $adstxtmanager_status['message'] = "The ads.txt URL returned an error (HTTP code: " . $response_code . "). Please check your account on adstxtmanager.com.";
+                    update_option('adstxtmanager_status', $adstxtmanager_status);
+                    return false;
+                }
             } else {
                 $adstxtmanager_status['message'] = "The ads.txt is not redirecting to the correct adstxtmanager.com location. Please remove/fix any existing redirections to your <a href=\"" . home_url($wp->request) . "/ads.txt\" target=\"_blank\">ads.txt</a> file.";
                 update_option('adstxtmanager_status', $adstxtmanager_status);
@@ -333,5 +403,4 @@ class AdstxtManager_Admin {
         update_option('adstxtmanager_status', $adstxtmanager_status);
         return false;
     }
-
 }

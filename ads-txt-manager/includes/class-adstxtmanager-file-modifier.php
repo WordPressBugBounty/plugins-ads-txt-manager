@@ -1,31 +1,36 @@
 <?php
 
-class AdsTxtManager_File_Modifier implements iAdsTxtManager_Solution {
+class AdsTxtManager_File_Modifier implements iAdsTxtManager_Solution
+{
 
-    private function determineRootPath() {
+    private function determineRootPath()
+    {
         return get_home_path();
     }
 
-    private function modifiedAdsTxtFileName() {
+    private function modifiedAdsTxtFileName()
+    {
         return $this->determineRootPath() . "ads-txt-orig.txt";
     }
 
-    private function origAdsTxtFileName() {
+    private function origAdsTxtFileName()
+    {
         return $this->determineRootPath() . "ads.txt";
     }
 
-    public function SetupSolution() {
+    public function SetupSolution()
+    {
         //Do we have an ads.txt file? rename the file to ads-txt-orig.txt
         //Get path to cache folder and insert out htaccess file or modify current htaccess file
         $filePath = $this->origAdsTxtFileName();
         $newFilePath = $this->modifiedAdsTxtFileName();
 
-	    if(empty($filePath) || !file_exists($filePath)) {
+        if (empty($filePath) || !file_exists($filePath)) {
             return;
         }
 
         $renameSuccess = rename($filePath, $newFilePath);
-	    if ($renameSuccess == false) {
+        if ($renameSuccess == false) {
             $message = "Failed to rename existing ads.txt file.";
         }
 
@@ -35,20 +40,20 @@ class AdsTxtManager_File_Modifier implements iAdsTxtManager_Solution {
         if (!empty($message)) {
             $adstxtmanager_status['message'] = $message;
         }
-        update_option( 'adstxtmanager_status', $adstxtmanager_status );
-
+        update_option('adstxtmanager_status', $adstxtmanager_status);
     }
 
-    public function TearDownSolution() {
+    public function TearDownSolution()
+    {
         //Do we have an ads-txt-orig.txt file? restore that to ads.txt
         $modifiedFilePath = $this->modifiedAdsTxtFileName();
         $origFilePath = $this->origAdsTxtFileName();
 
-        if(empty($modifiedFilePath ) || !file_exists($modifiedFilePath )) {
+        if (empty($modifiedFilePath) || !file_exists($modifiedFilePath)) {
             return;
         }
 
-        $renameSuccess = rename($modifiedFilePath , $origFilePath);
+        $renameSuccess = rename($modifiedFilePath, $origFilePath);
 
         delete_option('adstxtmanager_status');
     }
